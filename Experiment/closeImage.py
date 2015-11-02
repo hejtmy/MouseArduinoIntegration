@@ -18,5 +18,3 @@ while(True):
         kill(proc.pid)
     except Exception:
         print "nothing to close"
-        
-    sleep(3)
