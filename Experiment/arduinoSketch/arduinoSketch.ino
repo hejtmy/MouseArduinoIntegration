@@ -1,7 +1,7 @@
 void setup() {
   // put your setup code here, to run once:
 Serial.begin(9600);
-pinMode(7, INPUT);
+pinMode(7, INPUT_PULLUP);
 }
 
 bool sendCode = true;
@@ -12,20 +12,24 @@ void sendTouch()
 {
   while(true)
   {
-    if (digitalRead(7) == HIGH && wasTouching == false)
+    if (digitalRead(7) == LOW && wasTouching == false)
     {
-      Serial.println("pushed");
+      Serial.print("PUSHED\n");
       wasTouching = true;
-      if (digitalRead(7) == LOW)
-      {
-        wasTouching = false;
-      }
     }
+    
+    if (digitalRead(7) == HIGH)
+    {
+      wasTouching = false;
+    }
+    
     if (Serial.available()>0 && Serial.readString()=="REPEAT")
-      {
+    {
+        wasTouching = false;
         break;
         //alternatively loop()
-      }
+    }
+    delay(50);
   }
 }
 
@@ -34,14 +38,14 @@ void loop() {
   if (sendCode == true)
   {
     Serial.print("CX37\n");
-    delay(1000);
     if (Serial.available()>0)
     {
-      String value = Serial.readString();
+      value = Serial.readString();
       if (value == "STOP")
       {
         sendTouch();
       }
     }
+    delay(1000);
   }
 }

@@ -48,27 +48,25 @@ if (isInt(repeat)==0 and int(repeat) > 0):
 else:
     print "Couldn't make repeat an Int, or less than 0"
 
-##try communication with arduino, wait until specific code "XX37" is received, NEVYZKOUSENO
-##try:
-##    ard = serial.Serial("COM4", 9600)
-##except Exception:
-##    raise ValueError("Couldn't connect to Arduino")
-##
-####flush buffer
-##while (ard.inWaiting>0):
-##    ard.read() ##takhle?
-##
-####wait, until arduino sends again the "XX37" code
-##while (True):
-##    if (ard.inWaiting()>0):
-##        arduinoText = ard.readline()
-##        if (arduinoText == "XX37"):
-##            print "communication with arduino OK"
-####            Let arduino know to stop sending code XX37!
-##            break
+
 def fileExists():
     if (os.path.isfile(fileName)==True):
-        raise ValueError("FIlE ALREADY EXISTS!!!")        
+        raise ValueError("FIlE ALREADY EXISTS!!!")
+    
+def connect():
+    ##try communication with arduino, wait until specific code "CX37" is received, NEVYZKOUSENO
+    global ard
+    try:
+        ard = serial.Serial("COM4", 9600)
+    except Exception:
+        raise ValueError("Couldn't connect to Arduino")
+
+    ##wait, until arduino sends again the "XX37" code
+def sendStop():
+    ard.write("STOP")
+
+def sendReset():
+    ard.write("REPEAT")
 
 def writeHeader():
     dataFile = open("%s" % fileName, "w")
@@ -76,10 +74,10 @@ def writeHeader():
     dataFile.write(time.strftime("%d/%m/%y\t%H:%M:%S\n"))
     dataFile.write("Repetitions to be made: %s\n" % str(repeat) )
     dataFile.write("\n")
-    dataFile.write("Number\tStatus\tPicture\tTiming\n")
+    dataFile.write("Number\tStatus\tPicture\tTiming\tPhase\n")
     dataFile.close()
     
-def writeWrong():
+def writeWrong(phase):
     dataFile = open("%s" % fileName, "a")
     dataFile.write("%s\t" % str(counter))
     dataFile.write("False\t")
@@ -89,13 +87,24 @@ def writeWrong():
     else:
         dataFile.write("False\t")
 
-    if ((now - start) > (initLag + 0.001) and (now - start) < (initLag + imgLag)):
+    if ((now - start) > (initLag) and (now - start) < (initLag + imgLag)):
         dataFile.write("True\t")
     else:
         dataFile.write("False\t")
+    dataFile.write("%d" %phase)
     dataFile.write("\n")
     dataFile.close()
 
+def writeOK(phase):
+    dataFile = open("%s" % fileName, "a")
+    dataFile.write("%s\t" % str(counter))
+    dataFile.write("True\t") ##status
+    dataFile.write("True\t") ##img
+    dataFile.write("True\t") ##timing
+    dataFile.write("%d" % phase) ##timing
+    dataFile.write("\n")
+    dataFile.close()
+    
 def kill(proc_pid): ##function for killing process of showing picture
     process = psutil.Process(proc_pid)
     for proc in process.get_children(recursive=True):
@@ -118,40 +127,65 @@ def openImg(number): ##open image function, returns image viewer process ID
 
 ##pokazde spustit funkci pro kazdy obrazek
 def experiment(shape):
-    global start, now, counter
+    print "Img shown!"
+    global counter, start, now
     start = time.clock() ##initialize timer
     processId = openImg(shape) ##open picture
     now = time.clock()
     while ((now-start)<initLag): ##wrong time
         now = time.clock()
-##        if (ard.inWaiting()>0):
-##            value = ard.readline()
-##            if (value == "pushed"):
-##                writeWrong();
-##    print ("phase 1 ended, time from beginning is %.3fs" % (now - start))
-
-    writeWrong() ##pokusne zapsat do souboru
+        if (ard.inWaiting()>0):
+            value = ard.readline()
+            if (value == "PUSHED\n"):
+                writeWrong(1);
+        time.sleep(0.05)
+    print "Phase 1 ended"
     while ((now - start)< (initLag + imgLag)):
+        if (ard.inWaiting()>0):
+            value = ard.readline()
+            if (value == "PUSHED\n" and picture == rightPicture):
+                writeOK(2);
+            else:
+                writeWrong(2)
         now = time.clock()
-##        if (ard.inWaiting()>0):
-##            value = ard.readline()
-##            if (value == "pushed" and picture == rightPicture):
-##                writeRight();
-##    if (picture == rightPicture):
-##        print ("Right picture during phase 2 shown")
+        time.sleep(0.05)
+    print "Phase 2 ended"
     while ((now - start)< (initLag + imgLag + finishLag)):
+        if (ard.inWaiting()>0):
+            value = ard.readline()
+            if (value == "PUSHED\n"):
+                writeWrong(3);
         now = time.clock()
-##        if (ard.inWaiting()>0):
-##            value = ard.readline()
-##            if (value == "pushed"):
-##                writeRight();
+        time.sleep(0.05)
+    print "Phase 3 ended"
+    
     kill(processId) ##close image
     counter = counter + 1; ##increment counter of repetitions
 
-##begin experiment itself - call experiment function
+##begin experiment itself - onnect to arduino and call experiment function
+
+connect() ##connect to arduino
+sendStop()
+
+while (True):  ##check for code CX37\n
+    if (ard.inWaiting()>0):
+        arduinoText = ard.readline()
+        if (arduinoText == "CX37\n"):
+            print "communication with arduino OK"
+            sendStop()
+            time.sleep(3)
+            break ##break when received "CX37\n"
+
 fileExists() ##check for file existance
 writeHeader() ##write file header
-for i in range(repeat):
-    shapeNumber = randint(1,3)
+
+##flush previous pushed signals
+while (ard.inWaiting()>0):
+    ard.read()
+    
+for i in range(repeat): ##experiment itself
+    shapeNumber = randint(1,3) ##random picture choice
     experiment(shapeNumber)
-print ("Experiment ran succesfully!")
+
+sendReset()
+print ("Reset arduino!")
