@@ -1,119 +1,102 @@
 #import modules
-import subprocess as sp ##import for subprocessing, show an image
-import serial ##for communication with arduino
-import time ##for time.clock(), strftime and....
-import psutil ##import for subprocessing, closing an image viewer
-from random import randint
-import os.path
-##set up experiment variables and parametres
-initLag = raw_input("Enter lag to start after showing image (seconds): ")
-imgLag = raw_input("Enter lag between images (seconds): ")
-finishLag = raw_input("Enter lag to start after showing image (seconds): ")
-picture = "square" ##variable - which image was shown
-rightPicture = "circle" ##variable - which image is right
-repeat = raw_input("Enter number of repetitions: ")
-fileName = raw_input("Name of the file: ")##check for alreadz existing file
-counter = 1
-##write functions for checking correct inputs from user - delays
-##check value of variables
+import subprocess as sp     ##for subprocessing - showing an image
+import serial               ##for communication with arduino
+import time                 ##for time.clock(), strftime and....
+import psutil               ##for subprocessing, closing an image viewer
+from random import randint  ##for choosing random image
+import os.path              ##for checking if file exists
+
+##write functions for the use during experiment
+
+##check if value is integer
 def isInt(value):
     try:
         int(value)
     except Exception:
-        return -1
+        raise ValueError("%s IS NOT INTEGER!!!" % value)
     return 0
-##imglag
-if (isInt(imgLag)==0 and int(imgLag) > 0):
-    imgLag = int(imgLag)
-    print "imgLag set!"
-else:
-##  print "Couldn't make imgLag an Int, or less than 0"
-    raise ValueError("imgLag is bullshit")
-##nitLag
-if (isInt(initLag)==0 and int(initLag) > 0):
-    initLag = int(initLag)
-    print "initLag set!"
-else:
-    print "Couldn't make imgLag an Int, or less than 0"
-##finishlag
-if (isInt(finishLag)==0 and int(finishLag) > 0):
-    finishLag = int(finishLag)
-    print "initLag set!"
-else:
-    print "Couldn't make imgLag an Int, or less than 0"
-##repeat
-if (isInt(repeat)==0 and int(repeat) > 0):
-    repeat = int(repeat)
-    print "Repeat set!"
-else:
-    print "Couldn't make repeat an Int, or less than 0"
 
-
+##check if file to be created already exists
 def fileExists():
     if (os.path.isfile(fileName)==True):
         raise ValueError("FIlE ALREADY EXISTS!!!")
-    
+
+##connect to arduino
 def connect():
-    ##try communication with arduino, wait until specific code "CX37" is received, NEVYZKOUSENO
     global ard
     try:
         ard = serial.Serial("COM4", 9600)
     except Exception:
-        raise ValueError("Couldn't connect to Arduino")
+        raise ValueError("COULDN'T CONNECT TO ARDUINO!!!")
 
-    ##wait, until arduino sends again the "XX37" code
+##sends stop code "STOP" to let arduino know communication is OK
 def sendStop():
     ard.write("STOP")
 
+##at the end of the experiment, reset arduino cycle = start sending "CX37"" again
 def sendReset():
     ard.write("REPEAT")
 
+##write file header in specific format
+##1st line - "Mouse experiment"
+##2nd line - Date and time of creation
+##3rd line - Repetitions to be made
+##4th line - Free line for further notes
+##5th line - Format of data sequence writing
 def writeHeader():
     dataFile = open("%s" % fileName, "w")
     dataFile.write("Mouse experiment\n")
     dataFile.write(time.strftime("%d/%m/%y\t%H:%M:%S\n"))
     dataFile.write("Repetitions to be made: %s\n" % str(repeat) )
     dataFile.write("\n")
-    dataFile.write("Number\tStatus\tPicture\tTiming\tPhase\n")
+    dataFile.write("Number\tStatus\tPicture\tTiming\tPhase\tElapsed\n")
     dataFile.close()
     
+##write to file, when button is pushed UNCORRECTLY
+##phase argument - during which phase button was pushed (1/2/3)
+##elapsed time = timing = time since showing the picture
 def writeWrong(phase):
-    dataFile = open("%s" % fileName, "a")
-    dataFile.write("%s\t" % str(counter))
-    dataFile.write("False\t")
+    elapsedTime = now - start               ##time elapsed from showing picture
     
-    if (picture == rightPicture):
-        dataFile.write("True\t")
+    dataFile = open("%s" % fileName, "a")   ##open a file
+    dataFile.write("%s\t" % str(counter))   ##write number of push
+    dataFile.write("False\t")               ##write Status - False
+    
+    if (picture == correctPicture):           ##if the right picture was shown
+        dataFile.write("True\t")            ##write Picture - True
     else:
-        dataFile.write("False\t")
+        dataFile.write("False\t")           ##write Picture - False
 
-    if ((now - start) > (initLag) and (now - start) < (initLag + imgLag)):
-        dataFile.write("True\t")
+    ###alternative - if (phase == 2):
+    if (elapsedTime > (initLag) and elapsedTime < (initLag + imgLag)):
+        dataFile.write("True\t")            ##write Timing - True
     else:
-        dataFile.write("False\t")
-    dataFile.write("%d" %phase)
+        dataFile.write("False\t")           ##write Timing - False
+    dataFile.write("%d\t" % phase)          ##write Phase
+    dataFile.write("%.2f\t" % elapsedTime)  ##write Elapsed time
     dataFile.write("\n")
     dataFile.close()
-
+    
+##write to file, when button is pushed CORRECTLY
+##phase argument - during which phase button was pushed (1/2/3)
+##elapsed time = timing = time since showing the picture
 def writeOK(phase):
-    dataFile = open("%s" % fileName, "a")
-    dataFile.write("%s\t" % str(counter))
-    dataFile.write("True\t") ##status
-    dataFile.write("True\t") ##img
-    dataFile.write("True\t") ##timing
-    dataFile.write("%d" % phase) ##timing
+    elapsedTime = now - start;              ##time elapsed from showing picture
+    dataFile = open("%s" % fileName, "a")   ##open a file
+    dataFile.write("%s\t" % str(counter))   ##write number of push
+    dataFile.write("True\t")                ##write Status - True
+    dataFile.write("True\t")                ##write Picture - True
+    dataFile.write("True\t")                ##write Timing - True
+    dataFile.write("%d\t" % phase)          ##write Phase
+    dataFile.write("%.2f" % elapsedTime)    ##write Elapsed time
     dataFile.write("\n")
     dataFile.close()
-    
-def kill(proc_pid): ##function for killing process of showing picture
-    process = psutil.Process(proc_pid)
-    for proc in process.get_children(recursive=True):
-        proc.kill()
-    process.kill()
 
-def openImg(number): ##open image function, returns image viewer process ID
-    global picture ##global variable, indicating which image was opened
-    global proc
+##function for opening an image
+##function returns ID of the image process (MS Paint)
+def openImg(number):
+    global picture          ##global variable, indicating which image was opened
+    ##global proc             ##global class proc, asi neni nutne "global"
     if (number == 1):
         proc = sp.Popen("mspaint circle.jpg", shell=True)
         picture = "circle"
@@ -123,69 +106,121 @@ def openImg(number): ##open image function, returns image viewer process ID
     if (number == 3):
         proc = sp.Popen("mspaint triangle.jpg", shell=True)
         picture = "triangle"
-    return (proc.pid) ##return number of proceess ID
+    return (proc.pid)       ##Proceess ID to be closed with kill() function
+    
+def kill(proc_pid):         ##function for killing process of showing picture
+    process = psutil.Process(proc_pid)
+    for proc in process.get_children(recursive=True):
+        proc.kill()
+    process.kill()          ##kill the process of showing an image
 
-##pokazde spustit funkci pro kazdy obrazek
+##for each image to be shown, call this main experiment function
+##only argument is randomly generated number, specifying pictre to be opened
 def experiment(shape):
-    print "Img shown!"
-    global counter, start, now
-    start = time.clock() ##initialize timer
-    processId = openImg(shape) ##open picture
-    now = time.clock()
-    while ((now-start)<initLag): ##wrong time
-        now = time.clock()
-        if (ard.inWaiting()>0):
+    global counter, start, now          ##global variables (now, start -> timing)
+    start = time.clock()                ##initialize timing
+    processId = openImg(shape)          ##open picture, assign processID value
+    now = time.clock()                  ##now = updated timing variable for comparing times
+    while ((now-start)<initLag):        ##PHASE 1
+        if (ard.inWaiting()>0):         
             value = ard.readline()
-            if (value == "PUSHED\n"):
+            if (value == "PUSHED\n"):   ##if button was pushed, write it to file
                 writeWrong(1);
-        time.sleep(0.05)
-    print "Phase 1 ended"
-    while ((now - start)< (initLag + imgLag)):
-        if (ard.inWaiting()>0):
+        time.sleep(0.05)                ##wait 50ms
+        now = time.clock()              ##update current time variable
+    ##PHASE 1 ENDED
+    while ((now - start)< (initLag + imgLag)):  ##PHASE 2
+        if (ard.inWaiting()>0):         
             value = ard.readline()
-            if (value == "PUSHED\n" and picture == rightPicture):
-                writeOK(2);
+            if (value == "PUSHED\n" and picture == correctPicture):
+                writeOK(2);             ##if button was pushed, write it to file 
             else:
                 writeWrong(2)
-        now = time.clock()
-        time.sleep(0.05)
-    print "Phase 2 ended"
-    while ((now - start)< (initLag + imgLag + finishLag)):
+        time.sleep(0.05)                ##wait 50ms
+        now = time.clock()              ##update current time variable
+    ##PHASE 2 ENDED
+    while ((now - start)< (initLag + imgLag + finishLag)): ##PHASE 3
         if (ard.inWaiting()>0):
             value = ard.readline()
-            if (value == "PUSHED\n"):
+            if (value == "PUSHED\n"):   ##if button was pushed, write it to file 
                 writeWrong(3);
-        now = time.clock()
-        time.sleep(0.05)
-    print "Phase 3 ended"
+        time.sleep(0.05)                ##wait 50ms
+        now = time.clock()              ##update current time variable
+    ##PHASE 3 ENDED
     
-    kill(processId) ##close image
-    counter = counter + 1; ##increment counter of repetitions
+    kill(processId)                     ##close image = close the process
+    counter = counter + 1;              ##increment counter of repetitions
 
-##begin experiment itself - onnect to arduino and call experiment function
 
-connect() ##connect to arduino
-sendStop()
+##START THE EXPERIMENT ITSELF - CONNECT TO ARDUINO AND START CALLING FUNCTIONS
 
-while (True):  ##check for code CX37\n
+connect()                       ##connect to arduino
+
+while (True):                   ##check for code "CX37\n", wait until it is received
     if (ard.inWaiting()>0):
         arduinoText = ard.readline()
-        if (arduinoText == "CX37\n"):
-            print "communication with arduino OK"
-            sendStop()
-            time.sleep(3)
-            break ##break when received "CX37\n"
+        if (arduinoText == "CX37\n"): ##if "CX37\n" code is received
+            print "Received code!"
+            sendStop()          ##tell it to stop sending "CX37" identification code
+            time.sleep(3)       ##sleep for 3 sec
+            break               ##break when received "CX37\n"
 
-fileExists() ##check for file existance
-writeHeader() ##write file header
+fileName = raw_input("Name of the file: ")
+fileExists()                    ##program exits if the file already exists, otherwise quit
 
-##flush previous pushed signals
-while (ard.inWaiting()>0):
+##set up experiment parametres, initialize variables
+initLag = raw_input("Duration of PHASE 1 (seconds): ")
+imgLag = raw_input("Duration of PHASE 2 (seconds): ")
+finishLag = raw_input("Duration of PHASE 3 (seconds): ")
+repeat = raw_input("Enter number of repetitions: ")
+
+picture = "square"              ##initialize to random value
+correctPicture = "circle"       ##variable - which image is correct
+counter = 1                     ##counting repetition number
+
+##check values of phase durations, if wrong value -> quit the program
+##check value of imgLag
+if (isInt(imgLag)==0 and int(imgLag) > 0):
+    imgLag = int(imgLag)
+    print "imgLag set!"
+else:
+    raise ValueError("Couldn't make imgLag an Int, or less than 0")
+
+##check value of imgLag
+if (isInt(initLag)==0 and int(initLag) > 0):
+    initLag = int(initLag)
+    print "initLag set!"
+else:
+    raise ValueError("Couldn't make initLag an Int, or less than 0")
+
+##check value of finishLag
+if (isInt(finishLag)==0 and int(finishLag) > 0):
+    finishLag = int(finishLag)
+    print "finishLag set!"
+else:
+    raise ValueError("Couldn't make finishLag an Int, or less than 0")
+
+##check value of repeat
+if (isInt(repeat)==0 and int(repeat) > 0):
+    repeat = int(repeat)
+    print "Repeat set!"
+else:
+    raise ValueError("Couldn't make repeat an Int, or less than 0")
+
+
+
+writeHeader()                   ##write file header
+
+while (ard.inWaiting()>0):      ##flush previous pushed signals
     ard.read()
-    
-for i in range(repeat): ##experiment itself
-    shapeNumber = randint(1,3) ##random picture choice
-    experiment(shapeNumber)
 
-sendReset()
-print ("Reset arduino!")
+time.sleep(3)                   ##prepare for the experiment
+
+for i in range(repeat):         ##call experiment function "repeat" times
+    shapeNumber = randint(1,3)  ##random picture choice, passed to function
+    experiment(shapeNumber)     ##call experiment main function
+    
+    ##ADD -> flush PUSHED signals received between images!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+sendReset()                     ##reset Arduino, start sending "CX37\n again"
+print ("Experiment ran succesfully, Arduino reseted!")
