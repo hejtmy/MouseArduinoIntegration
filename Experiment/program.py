@@ -5,37 +5,14 @@ import time                 ##for time.clock(), strftime and....
 import psutil               ##for subprocessing, closing an image viewer
 from random import randint  ##for choosing random image
 import os.path              ##for checking if file exists
+from Experiment.helpers import isInt             ## custom functions
+from Experiment.arduino import connect
 
-##write functions for the use during experiment
-
-##check if value is integer
-def isInt(value):
-    try:
-        int(value)
-    except Exception:
-        raise ValueError("%s IS NOT INTEGER!!!" % value)
-    return 0
 
 ##check if file to be created already exists
 def fileExists():
     if (os.path.isfile(fileName)==True):
         raise ValueError("FIlE ALREADY EXISTS!!!")
-
-##connect to arduino
-def connect():
-    global ard
-    try:
-        ard = serial.Serial("COM3", 9600)
-    except Exception:
-        raise ValueError("COULDN'T CONNECT TO ARDUINO!!!")
-
-##sends stop code "STOP" to let arduino know communication is OK
-def sendStop():
-    ard.write(b'STOP')
-
-##at the end of the experiment, reset arduino cycle = start sending "CX37"" again
-def sendReset():
-    ard.write(b'REPEAT')
 
 ##write file header in specific format
 ##1st line - "Mouse experiment"
