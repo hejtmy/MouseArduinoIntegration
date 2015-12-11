@@ -1,95 +1,35 @@
 #import modules
 import subprocess as sp     ##for subprocessing - showing an image
-import serial               ##for communication with arduino
 import time                 ##for time.clock(), strftime and....
 import psutil               ##for subprocessing, closing an image viewer
 from random import randint  ##for choosing random image
-import os.path              ##for checking if file exists
-from Experiment.helpers import isInt             ## custom functions
-from Experiment.arduino import connect
+from Experiment.helpers import isInt, kill             ## custom functions
+from Experiment.arduino import Arduino
+from Experiment.WriteClass import WriteClass
+
+###SETUP
+#isntantiate arduino class
+#instantiate write class
+arduino = Arduino();
+
+while (True):
+    try:
+        arduino.connect();
+    except ConnectionError as con_err:
+        print(con_err);
+        continue
+    #this might be redundant - need to check the pySerial doc what happens in Open stream
+    if arduino.isConnected():
+        ##if "CX37\n" code is received we break the cycle and
+        arduinoText = arduino.readline();
+        if (b'CX37' in arduinoText):
+            print ("Received code!")
+            arduino.sendConnectionOK()          ##tell it to stop sending "CX37" identification code
+            time.sleep(3)
+            break
 
 
-##check if file to be created already exists
-def fileExists():
-    if (os.path.isfile(fileName)==True):
-        raise ValueError("FIlE ALREADY EXISTS!!!")
-
-##write file header in specific format
-##1st line - "Mouse experiment"
-##2nd line - Date and time of creation
-##3rd line - Repetitions to be made
-##4th line - Free line for further notes
-##5th line - Format of data sequence writing
-def writeHeader():
-    dataFile = open("%s" % fileName, "w")
-    dataFile.write("Mouse experiment\n")
-    dataFile.write(time.strftime("%d/%m/%y\t%H:%M:%S\n"))
-    dataFile.write("Repetitions to be made: %s\n" % str(repeat) )
-    dataFile.write("\n")
-    dataFile.write("Number\tStatus\tPicture\tTiming\tPhase\tElapsed\n")
-    dataFile.close()
-
-##write to file, when button is pushed UNCORRECTLY
-##phase argument - during which phase button was pushed (1/2/3)
-##elapsed time = timing = time since showing the picture
-def writeWrong(phase):
-    elapsedTime = now - start               ##time elapsed from showing picture
-
-    dataFile = open("%s" % fileName, "a")   ##open a file
-    dataFile.write("%s\t" % str(counter))   ##write number of push
-    dataFile.write("False\t")               ##write Status - False
-
-    if (picture == correctPicture):           ##if the right picture was shown
-        dataFile.write("True\t")            ##write Picture - True
-    else:
-        dataFile.write("False\t")           ##write Picture - False
-
-    ###alternative - if (phase == 2):
-    if (elapsedTime > (initLag) and elapsedTime < (initLag + imgLag)):
-        dataFile.write("True\t")            ##write Timing - True
-    else:
-        dataFile.write("False\t")           ##write Timing - False
-    dataFile.write("%d\t" % phase)          ##write Phase
-    dataFile.write("%.2f\t" % elapsedTime)  ##write Elapsed time
-    dataFile.write("\n")
-    dataFile.close()
-
-##write to file, when button is pushed CORRECTLY
-##phase argument - during which phase button was pushed (1/2/3)
-##elapsed time = timing = time since showing the picture
-def writeOK(phase):
-    elapsedTime = now - start;              ##time elapsed from showing picture
-    dataFile = open("%s" % fileName, "a")   ##open a file
-    dataFile.write("%s\t" % str(counter))   ##write number of push
-    dataFile.write("True\t")                ##write Status - True
-    dataFile.write("True\t")                ##write Picture - True
-    dataFile.write("True\t")                ##write Timing - True
-    dataFile.write("%d\t" % phase)          ##write Phase
-    dataFile.write("%.2f" % elapsedTime)    ##write Elapsed time
-    dataFile.write("\n")
-    dataFile.close()
-
-##function for opening an image
-##function returns ID of the image process (MS Paint)
-def openImg(number):
-    global picture          ##global variable, indicating which image was opened
-    ##global proc             ##global class proc, asi neni nutne "global"
-    if (number == 1):
-        proc = sp.Popen("mspaint circle.jpg", shell=True)
-        picture = "circle"
-    if (number == 2):
-        proc = sp.Popen("mspaint square.jpg", shell=True)
-        picture = "square"
-    if (number == 3):
-        proc = sp.Popen("mspaint triangle.jpg", shell=True)
-        picture = "triangle"
-    return (proc.pid)       ##Proceess ID to be closed with kill() function
-
-def kill(proc_pid):         ##function for killing process of showing picture
-    process = psutil.Process(proc_pid)
-    for proc in process.get_children(recursive=True):
-        proc.kill()
-    process.kill()          ##kill the process of showing an image
+###Program logic
 
 ##for each image to be shown, call this main experiment function
 ##only argument is randomly generated number, specifying pictre to be opened
@@ -102,7 +42,7 @@ def experiment(shape):
         if (ard.inWaiting()>0):
             value = ard.readline()
             if (b'PUSHED' in value):   ##if button was pushed, write it to file
-                writeWrong(1);
+                writer.writeWrong(1);
         time.sleep(0.05)                ##wait 50ms
         now = time.clock()              ##update current time variable
     ##PHASE 1 ENDED
@@ -110,9 +50,9 @@ def experiment(shape):
         if (ard.inWaiting()>0):
             value = ard.readline()
             if (b'PUSHED' in value and picture == correctPicture):
-                writeOK(2);             ##if button was pushed, write it to file
+                writer.writeOK(2);             ##if button was pushed, write it to file
             else:
-                writeWrong(2)
+                writer.writeWrong(2)
         time.sleep(0.05)                ##wait 50ms
         now = time.clock()              ##update current time variable
     ##PHASE 2 ENDED
@@ -120,7 +60,7 @@ def experiment(shape):
         if (ard.inWaiting()>0):
             value = ard.readline()
             if (b'PUSHED' in value):   ##if button was pushed, write it to file
-                writeWrong(3);
+                writer.writeWrong(3);
         time.sleep(0.05)                ##wait 50ms
         now = time.clock()              ##update current time variable
     ##PHASE 3 ENDED
@@ -128,22 +68,14 @@ def experiment(shape):
     kill(processId)                     ##close image = close the process
     counter = counter + 1;              ##increment counter of repetitions
 
-
 ##START THE EXPERIMENT ITSELF - CONNECT TO ARDUINO AND START CALLING FUNCTIONS
 
-connect()                       ##connect to arduino
-
-while (True):                   ##check for code "CX37\n", wait until it is received
-    if (ard.inWaiting()>0):
-        arduinoText = ard.readline()
-        if (b'CX37' in arduinoText): ##if "CX37\n" code is received
-            print ("Received code!")
-            sendStop()          ##tell it to stop sending "CX37" identification code
-            time.sleep(3)       ##sleep for 3 sec
-            break               ##break when received "CX37\n"
-
 fileName = input("Name of the file: ")
-fileExists()                    ##program exits if the file already exists, otherwise quit
+##program exits if the file already exists, otherwise quit
+
+writer = WriteClass(fileName);
+writer.openFile();
+
 
 ##set up experiment parametres, initialize variables
 initLag = input("Duration of PHASE 1 (seconds): ")
@@ -201,3 +133,23 @@ for i in range(repeat):         ##call experiment function "repeat" times
 
 sendReset()                     ##reset Arduino, start sending "CX37\n again"
 print ("Experiment ran succesfully, Arduino reseted!")
+
+
+
+
+##function for opening an image
+##function returns ID of the image process (MS Paint)
+def openImg(number):
+    global picture          ##global variable, indicating which image was opened
+    ##global proc             ##global class proc, asi neni nutne "global"
+    if (number == 1):
+        proc = sp.Popen("mspaint circle.jpg", shell=True)
+        picture = "circle"
+    if (number == 2):
+        proc = sp.Popen("mspaint square.jpg", shell=True)
+        picture = "square"
+    if (number == 3):
+        proc = sp.Popen("mspaint triangle.jpg", shell=True)
+        picture = "triangle"
+    return (proc.pid)       ##Proceess ID to be closed with kill() function
+

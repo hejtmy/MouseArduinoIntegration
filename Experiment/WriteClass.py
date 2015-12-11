@@ -1,8 +1,9 @@
 import os.path              ##for checking if file exists
 import time
+from Experiment.helpers import yesOrNo
+from Experiment.experiment_class import Experiment
 class WriteClass:
     ###instantiate class
-
     def __init__(self, filename="arduino_experiment.txt"):
         self.filename = filename;
 
@@ -11,7 +12,14 @@ class WriteClass:
             self.fileExists();
         except FileExistsError as ex:
             print("FIlE ALREADY EXISTS!!!");
-
+            overwrite = input("Overwrite? (Y/N): ")
+            if yesOrNo(overwrite) == 1:
+                #overwrites the file
+            if yesOrNo(overwrite) == 0:
+                #lets the user to choose new name
+            if yesOrNo(overwrite) == -1:
+                print ("You haven't selected any valid choice");
+                #goes back to te selection of the filename
             #asks to rewrite:
 
     ##check if file to be created already exists
@@ -24,6 +32,8 @@ class WriteClassSpecificExperiment(WriteClass):
     now = 0
     start = 0
     counter = 0
+
+    experiment = Experiment()
     ##write file header in specific format
     ##1st line - "Mouse experiment"
     ##2nd line - Date and time of creation

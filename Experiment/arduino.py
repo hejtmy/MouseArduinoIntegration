@@ -13,6 +13,9 @@ class Arduino:
         except Exception:
             raise ValueError("COULDN'T CONNECT TO ARDUINO!!!")
 
+    def isConnected(self):
+        return self.connection.isOpen();
+
     ##sends stop code "STOP" to let arduino know communication is OK
     def sendConnectionOK(self):
         self.connection.write(b'STOP')
