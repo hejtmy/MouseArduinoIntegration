@@ -4,35 +4,13 @@ import time                 ##for time.clock(), strftime and....
 import psutil               ##for subprocessing, closing an image viewer
 from random import randint  ##for choosing random image
 from Experiment.helpers import isInt, kill             ## custom functions
-from Experiment.arduino import Arduino
-from Experiment.WriteClass import WriteClass
-
-###SETUP
-#isntantiate arduino class
-#instantiate write class
-arduino = Arduino();
-
-while (True):
-    try:
-        arduino.connect();
-    except ConnectionError as con_err:
-        print(con_err);
-        continue
-    #this might be redundant - need to check the pySerial doc what happens in Open stream
-    if arduino.isConnected():
-        ##if "CX37\n" code is received we break the cycle and
-        arduinoText = arduino.readline();
-        if (b'CX37' in arduinoText):
-            print ("Received code!")
-            arduino.sendConnectionOK()          ##tell it to stop sending "CX37" identification code
-            time.sleep(3)
-            break
-
-
-###Program logic
+from Experiment.arduino_class import Arduino
+from Experiment.write_class import WriteClass,WriteClassSpecificExperiment
+from Experiment.experiment_class import Experiment
 
 ##for each image to be shown, call this main experiment function
 ##only argument is randomly generated number, specifying pictre to be opened
+
 def experiment(shape):
     global counter, start, now          ##global variables (now, start -> timing)
     start = time.clock()                ##initialize timing
@@ -68,20 +46,40 @@ def experiment(shape):
     kill(processId)                     ##close image = close the process
     counter = counter + 1;              ##increment counter of repetitions
 
-##START THE EXPERIMENT ITSELF - CONNECT TO ARDUINO AND START CALLING FUNCTIONS
+###SETUP
+#isntantiate arduino class
+#instantiate write class
+arduino = Arduino();
 
+while (True):
+    try:
+        arduino.connect();
+    except ConnectionError as con_err:
+        print(con_err);
+        continue
+    #this might be redundant - need to check the pySerial doc what happens in Open stream
+    if arduino.is_connected():
+        ##if "CX37\n" code is received we break the cycle and
+        arduinoText = arduino.readline();
+        if (b'CX37' in arduinoText):
+            print ("Received code!")
+            arduino.sendConnectionOK()          ##tell it to stop sending "CX37" identification code
+            time.sleep(3)
+            break
+
+
+###Program logic
 fileName = input("Name of the file: ")
 ##program exits if the file already exists, otherwise quit
 
 writer = WriteClass(fileName);
-writer.openFile();
+while not writer.isOpen():
+    writer.openFile();
 
 
+experiment = Experiment()
 ##set up experiment parametres, initialize variables
-initLag = input("Duration of PHASE 1 (seconds): ")
-imgLag = input("Duration of PHASE 2 (seconds): ")
-finishLag = input("Duration of PHASE 3 (seconds): ")
-repeat = input("Enter number of repetitions: ")
+experiment.setup()
 
 picture = "square"              ##initialize to random value
 correctPicture = "circle"       ##variable - which image is correct
@@ -118,7 +116,7 @@ else:
 
 
 
-writeHeader()                   ##write file header
+writer.writeHeader()                   ##write file header
 
 while (ard.inWaiting()>0):      ##flush previous pushed signals
     ard.read()
@@ -131,7 +129,7 @@ for i in range(repeat):         ##call experiment function "repeat" times
 
     ##ADD -> flush PUSHED signals received between images!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-sendReset()                     ##reset Arduino, start sending "CX37\n again"
+arduino.sendReset();                     ##reset Arduino, start sending "CX37\n again"
 print ("Experiment ran succesfully, Arduino reseted!")
 
 

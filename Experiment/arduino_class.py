@@ -1,11 +1,11 @@
 import serial               ##for communication with arduino
 class Arduino:
 
-
     def __init__(self, baudrate = 9600, port = "COM3"):
         self.connection = serial.Serial();
         self.connection.baudrate = baudrate;
         self.connection.port = port;
+
     ##connect to arduino
     def connect(self):
         try:
@@ -13,7 +13,7 @@ class Arduino:
         except Exception:
             raise ValueError("COULDN'T CONNECT TO ARDUINO!!!")
 
-    def isConnected(self):
+    def is_connected(self):
         return self.connection.isOpen();
 
     ##sends stop code "STOP" to let arduino know communication is OK

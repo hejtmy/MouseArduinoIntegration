@@ -3,27 +3,41 @@ import time
 from Experiment.helpers import yesOrNo
 from Experiment.experiment_class import Experiment
 class WriteClass:
-    ###instantiate class
+
     def __init__(self, filename="arduino_experiment.txt"):
-        self.filename = filename;
+        self.setName(filename);
+        self.isOpen = False
 
     def openFile(self):
         try:
             self.fileExists();
+            self.isOpen = True;
         except FileExistsError as ex:
             print("FIlE ALREADY EXISTS!!!");
             overwrite = input("Overwrite? (Y/N): ")
             if yesOrNo(overwrite) == 1:
-                #overwrites the file
+                self.isOpen = True
             if yesOrNo(overwrite) == 0:
-                #lets the user to choose new name
+                new_name = input("Type new name: ")#lets the user to choose new name
+                self.setName(new_name)
             if yesOrNo(overwrite) == -1:
-                print ("You haven't selected any valid choice");
+                print ("You haven't selected any valid choice")
                 #goes back to te selection of the filename
-            #asks to rewrite:
+        except ValueError as e:
+            print(e)
+            new_name = input("Type new name: ")#lets the user to choose new name
+            self.setName(new_name)
+
+    def setName(self,name):
+        #checks name
+
+        #sets name
+        self.fileName=name;
 
     ##check if file to be created already exists
     def fileExists(self):
+        if self.fileName == None:
+            raise ValueError("Name of the file is not set")
         if (os.path.isfile(self.fileName)==True):
             raise FileExistsError("FIlE ALREADY EXISTS!!!")
 
@@ -32,14 +46,15 @@ class WriteClassSpecificExperiment(WriteClass):
     now = 0
     start = 0
     counter = 0
-
-    experiment = Experiment()
+    def __init__(self):
+        self.experiment = Experiment()
     ##write file header in specific format
     ##1st line - "Mouse experiment"
     ##2nd line - Date and time of creation
     ##3rd line - Repetitions to be made
     ##4th line - Free line for further notes
     ##5th line - Format of data sequence writing
+
     def writeHeader(self):
         dataFile = open("%s" % self.fileName, "w")
         dataFile.write("Mouse experiment\n")
