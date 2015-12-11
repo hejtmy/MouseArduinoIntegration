@@ -47,17 +47,17 @@ def experiment(shape):
     counter = counter + 1;              ##increment counter of repetitions
 
 ###SETUP
-#isntantiate arduino class
-#instantiate write class
 arduino = Arduino();
-
+#sets up arduino
 while (True):
     try:
         arduino.connect();
     except ConnectionError as con_err:
         print(con_err);
+        #maybe allow to reinstantite arduino or change te port values
         continue
-    #this might be redundant - need to check the pySerial doc what happens in Open stream
+    #this below might be redundant - need to check the pySerial doc what happens in Open stream,
+    #if it returns true, then we can just break the code
     if arduino.is_connected():
         ##if "CX37\n" code is received we break the cycle and
         arduinoText = arduino.readline();
@@ -67,11 +67,9 @@ while (True):
             time.sleep(3)
             break
 
-
 ###Program logic
 fileName = input("Name of the file: ")
 ##program exits if the file already exists, otherwise quit
-
 writer = WriteClass(fileName);
 while not writer.isOpen():
     writer.openFile();
