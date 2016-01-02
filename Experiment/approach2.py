@@ -1,17 +1,20 @@
-import serial, os, string, random
-
+import serial, os, string, random, subprocess, psutil, time
 
 class inputData():
     def __init__(self):
         self.times = []
         self.fileName = None
         self.reps = None
+        self.fileNameSet = False
+        self.timesSet = False
+        self.repsSet = False
+        self.totalTime = None
 
     def getTimes(self):
         allowedTimes = list(range(1,61))
         inputOK = False
         while (inputOK != True):
-            times = (input("Format: 1,60,31 Times: ")).split(',')
+            times = (input("Format: 5,4,8 Times: ")).split(',')
             if len(times) == 3:
                 try:
                     for time in times:
@@ -20,18 +23,21 @@ class inputData():
                     inputOK = True
                 except Exception:
                     pass
-        self.times = times     
+        self.times = times
+        self.timesSet = True
+        self.totalTime = sum(self.times)
         
     def getFileName(self):
         counter = None
         allowedChars = "()-_%s%s" % (string.ascii_letters, string.digits)
         while(counter != 0):
             counter = 0
-            fileName = input("File Name without .txt: ")
+            fileName = input("File name without .txt: ")
             for char in fileName:
                 if char not in allowedChars:
                     counter += 1
         self.fileName = fileName
+        self.fileNameSet = True
             
     def getReps(self):
         allowedReps = list(range(1,100))
@@ -43,7 +49,8 @@ class inputData():
                     inputOK = True
             except Exception:
                 pass
-        self.reps = reps 
+        self.reps = reps
+        self.repsSet = True
 
 
 class fileHandler():
@@ -65,15 +72,10 @@ class fileHandler():
         self.openFile()
         self.experimentFile.write("blah header blah\n")
         self.closeFile()
-
-    def writeOK(self):
-        self.openFile()
-        self.experimentFile.write("blah OK blah\n")
-        self.closeFile()
         
-    def writeWrong(self):
+    def write(self, time, correctTime, correctImage):
         self.openFile()
-        self.experimentFile.write("blah OK blah\n")
+        self.experimentFile.write("blah OK blah\n") ##change the format
         self.closeFile()
         
     def closeFile(self):
@@ -114,6 +116,75 @@ class Arduino (serial.Serial):
             
     def disconnect(self):
         self.close()
+    
+class Experiment():
+    def __init__(self):
+        self.images = ["circle.jpg" , "square.jpg" , "triangle.jpg"] ##list of image names
+        self.correctImage = None ##replace with proper img
+        self.currentImage = None
+        self.imageProcessID = None
+        self.counter = 0
+        self.randomInt = None
+        self.imageDict = {
+            1 : 'circle.jpg',
+            2 : 'square.jpg',
+            3 : 'triangle.jpg'
+            }
+    def showImg(self):
+        createRandomInt()
+        self.currentImage = self.imageDict[self.randomInt]
+        process = subprocess.Popen("mspaint %s" %self.randomInt, shell = True)
+        self.imageProcessID = process.pid
+    
+    def closeImg(self):
+        pass
+
+    def createRandomInt(self):
+        self.randomInt = random.randint(0,len(self.images)-1)
+    
+    def singleRound(self):
+        self.showImg()
+        timeNow = time.clock()
+
+        ##fileHandler.write(correctTime, correctImage)
+        
+        ##first segment
+        while( (time.clock() - timeNow) < inputData.times[0]):
+            while(MyArduino.inWaiting() != b"PUSHED/n"):
+                if (self.currentImage == self.correctImage):
+                    fileHandler.write( time.clock(),"False","True")
+                else:
+                    fileHandler.write( time.clock(),"False","False")
+
+        ##second segment
+        while( (time.clock() - timeNow) < inputData.times[1]):
+            while(MyArduino.inWaiting() != b"PUSHED/n"):
+                if (self.currentImage == self.correctImage):
+                    fileHandler.writeOK()
+                else:
+                    fileHandler.write(time.clock(),"True","False")
+
+        ##third segment
+        while( (time.clock() - timeNow) < inputData.times[2]):
+            while(MyArduino.inWaiting() != b"PUSHED/n"):
+                if (self.currentImage == self.correctImage):
+                    fileHandler.write(time.clock(),"False","True")
+                else:
+                    fileHandler.write(time.clock(),"Frue","False")
+
+        self.closeImg()
+        self.currentImg = None
+        self.imageProcessID = None
+            ##set currentImg = None
+            ##set processID = None
+            ##set 
+        pass
+    
+    def startExperiment(self):
+        while (counter < inputData.reps):
+            singleRound()
+            counter += 1
+        self.counter = 0
     
 ##MyArduino = Arduino()
 ##MyArduino.connect()
