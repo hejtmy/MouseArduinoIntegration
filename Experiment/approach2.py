@@ -1,4 +1,4 @@
-import serial, os, string, random, subprocess, psutil, time
+import serial, os, string, random, subprocess, time
 
 class inputData():
     def __init__(self):
@@ -55,14 +55,15 @@ class inputData():
 
 class fileHandler():
     def __init__(self, fileName):
-        self.fileName = fileName
+        self.fileName = "%s.txt" % fileName
         self.experimentFile = None
 
     def createFile(self):
         if (os.path.exists(self.fileName) == True):
             print("File aready exists")
+            raise FileExistsError("File with that name alerady exists!!!")
         elif (os.path.exists(self.fileName) == False):
-            self.experimentFile = open("%s.txt" % self.fileName, "w")
+            self.experimentFile = open("%s" % self.fileName, "w")
             self.experimentFile.close()
 
     def openFile(self):
@@ -75,7 +76,7 @@ class fileHandler():
         
     def write(self, time, correctTime, correctImage):
         self.openFile()
-        self.experimentFile.write("blah OK blah\n") ##change the format
+        self.experimentFile.write("%.2f;%s;%s\n" %(time, correctTime, correctImage)) ##change the format
         self.closeFile()
         
     def closeFile(self):
@@ -130,18 +131,20 @@ class Experiment():
             2 : 'square.jpg',
             3 : 'triangle.jpg'
             }
-    def showImg(self):
-        createRandomInt()
-        self.currentImage = self.imageDict[self.randomInt]
-        process = subprocess.Popen("mspaint %s" %self.randomInt, shell = True)
-        self.imageProcessID = process.pid
-    
-    def closeImg(self):
-        pass
 
     def createRandomInt(self):
         self.randomInt = random.randint(0,len(self.images)-1)
     
+    def showImg(self):
+        createRandomInt()
+        self.currentImage = self.imageDict[self.randomInt]
+        process = subprocess.Popen("mspaint %s" %self.imageDict[randomInt], shell = True)
+        self.imageProcessID = process.pid
+    
+    def closeImg(self):
+        subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=self.imageProcessID))
+        self.imageProcessID = None
+
     def singleRound(self):
         self.showImg()
         timeNow = time.clock()
@@ -175,29 +178,24 @@ class Experiment():
         self.closeImg()
         self.currentImg = None
         self.imageProcessID = None
-            ##set currentImg = None
-            ##set processID = None
-            ##set 
-        pass
-    
+
     def startExperiment(self):
         while (counter < inputData.reps):
             singleRound()
             counter += 1
         self.counter = 0
     
-##MyArduino = Arduino()
+MyArduino = Arduino()
 ##MyArduino.connect()
 ##MyArduino.prepareForExperiment()
 ###ready for an experiment
 ##MyArduino.resetArduino()
 
-##dataFile = fileHandler("fileName.txt")
-##dataFile.createFile()
-##dataFile.writeHeader()
-##dataFile.writeOK()
-##dataFile.writeWrong()
-##dataFile.closeFile()
+dataFile = fileHandler("givenFileName")
+dataFile.createFile()
+dataFile.writeHeader()
+dataFile.write(time.clock(),"False","True")
+dataFile.closeFile()
 
 ##data = inputData()
 ##data.getTimes()
