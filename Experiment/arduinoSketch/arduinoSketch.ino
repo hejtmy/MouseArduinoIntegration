@@ -4,9 +4,8 @@ Serial.begin(9600);
 pinMode(7, INPUT_PULLUP);
 }
 
-bool sendCode = true;
 bool wasTouching = false;
-String value = "";
+String value;
 
 void sendTouch()
 {
@@ -34,18 +33,14 @@ void sendTouch()
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  if (sendCode == true)
+  Serial.print("CX37\n");
+  if (Serial.available()>0)
   {
-    Serial.print("CX37\n");
-    if (Serial.available()>0)
+    value = Serial.readString();
+    if (value == "STOP")
     {
-      value = Serial.readString();
-      if (value == "STOP")
-      {
-        sendTouch();
-      }
+      sendTouch();
     }
-    delay(1000);
   }
+  delay(1000);
 }
