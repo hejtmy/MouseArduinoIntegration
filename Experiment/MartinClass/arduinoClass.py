@@ -34,3 +34,7 @@ class Arduino (serial.Serial):
             
     def disconnect(self):
         self.close()
+
+    def check(self):
+        if (self.readline() == b"PUSHED\n"):
+            ##call fileHandler to write to file

@@ -1,4 +1,4 @@
-import serial, os, string, random, subprocess, time
+import serial, os, string, random, time
 
 import arduinoClass, inputDataClass, fileHandlerClass, experimentClass
 

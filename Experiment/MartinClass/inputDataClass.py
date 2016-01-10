@@ -1,14 +1,18 @@
-import string
+import string, random
 
 class inputData():
     def __init__(self):
         self.times = []
+        self.imageIndexes = None ##create list of indexes for image loading
         self.fileName = None
         self.reps = None
+        
+        self.totalTime = None
+        
         self.fileNameSet = False
         self.timesSet = False
         self.repsSet = False
-        self.totalTime = None
+
 
     def getTimes(self):
         allowedTimes = list(range(1,61))
@@ -51,3 +55,6 @@ class inputData():
                 pass
         self.reps = reps
         self.repsSet = True
+        self.imageIndexes = []
+        for i in range(int(reps)):
+            self.imageIndexes.append(random.randint(0,2)) ##change to correct number of images

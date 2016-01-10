@@ -1,4 +1,6 @@
-import subprocess, time, random
+import time
+import tkinter as tk
+from PIL import Image, ImageTk
 
 class Experiment():
     def __init__(self):
@@ -7,25 +9,54 @@ class Experiment():
         self.currentImage = None
         self.imageProcessID = None
         self.counter = 0
-        self.randomInt = None
         self.imageDict = {
             1 : 'circle.jpg',
             2 : 'square.jpg',
             3 : 'triangle.jpg'
             }
 
-    def createRandomInt(self):
-        self.randomInt = random.randint(0,len(self.images)-1)
+        ##variables for tkinter 
+        self.imageFile = None
+        self.image1 = None
+        self.panel1 = None
+        self.root = None        
     
     def showImg(self):
-        createRandomInt()
-        self.currentImage = self.imageDict[self.randomInt]
-        process = subprocess.Popen("mspaint %s" %self.imageDict[randomInt], shell = True)
-        self.imageProcessID = process.pid
-    
+        ##initialize tkinter object
+        root = tk.Tk()
+        root.title('Mouse experiment')
+        
+        ##check timing??
+        
+    def setImage(self):
+        self.imageFile = "D:\Git\MouseArduinoIntegration\Experiment\black.jpg"
+        self.image1 = ImageTk.PhotoImage(Image.open(self.imageFile))
+        # get the image size
+        w = self.image1.width()
+        h = self.image1.height()
+        
+        # position coordinates of root 'upper left corner'
+        x = 0
+        y = 0
+        # make the root window the size of the image
+        root.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        # root has no image argument, so use a label as a panel
+        self.panel1 = tk.Label(root, image=self.image1)
+        self.panel1.pack(side='top', fill='both', expand='yes')
+        self.panel1.image = image1
+
+    def changeImage(self):
+        ##change size of the image
+        self.imageFile = "D:\Git\MouseArduinoIntegration\Experiment\%s" % self.imageDict[data.imageIndexes[self.counter]]
+        self.image1 = ImageTk.PhotoImage(Image.open(imageFile))
+        self.panel1.configure(
+        img = Image.open("D:\Git\MouseArduinoIntegration\Experiment\square.jpg")
+        photo = ImageTk.PhotoImage(img)
+        panel1.configure(image = photo)
+                    
     def closeImg(self):
-        subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=self.imageProcessID))
-        self.imageProcessID = None
+        ##replace with tkinter widget
+        pass
 
     def singleRound(self):
         self.showImg()
