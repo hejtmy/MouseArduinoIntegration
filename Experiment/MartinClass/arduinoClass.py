@@ -16,17 +16,21 @@ class Arduino (serial.Serial):
             
     def receivedSignal(self):
         if (self.connected):
-            self.write(b"STOP\n")
+            self.write(b"STOP")
 
     def resetArduino(self):
         if (self.connected):
-            self.write(b"RESET\n")
+            self.write(b"REPEAT")
+    
+    def feedMouse(self):
+        if (self.connected):
+            self.write(b"FEEDMOUSE")
 
     def prepareForExperiment(self):
         while(True):
             while (self.inWaiting() == 0):
                 pass
-            if (self.readline() == b"CX37\n"):
+            if (self.readline() == b"CX37"):
                 self.receivedSignal()
                 self.flushOutput()
                 self.flushInput()
@@ -36,5 +40,5 @@ class Arduino (serial.Serial):
         self.close()
 
     def check(self):
-        if (self.readline() == b"PUSHED\n"):
+        if (self.readline() == b"PUSHED"):
             ##call fileHandler to write to file
