@@ -2,13 +2,16 @@ import string, random
 
 class inputData():
     def __init__(self):
+        ##main variables
         self.times = []
-        self.imageIndexes = None ##create list of indexes for image loading
         self.fileName = None
         self.reps = None
         
+        self.imageIndexes = None ##create list of indexes for image loading
+        
         self.totalTime = None
         
+        #variables for checking if parametres are set
         self.fileNameSet = False
         self.timesSet = False
         self.repsSet = False
@@ -25,7 +28,7 @@ class inputData():
                         if int(time) in allowedTimes:
                             pass
                     inputOK = True
-                except Exception:
+                except Exception: ##edit exception
                     pass
         self.times = times
         self.timesSet = True
@@ -33,13 +36,15 @@ class inputData():
         
     def getFileName(self):
         counter = None
-        allowedChars = "()-_%s%s" % (string.ascii_letters, string.digits)
+        allowedChars = "()-_%s%s" % (string.ascii_letters, string.digits) ##only characters for file name allowed
         while(counter != 0):
             counter = 0
             fileName = input("File name without .txt: ")
             for char in fileName:
                 if char not in allowedChars:
                     counter += 1
+            if (counter > 0):
+                print("Invalid input - %d chars invalid!" % counter)
         self.fileName = fileName
         self.fileNameSet = True
             
