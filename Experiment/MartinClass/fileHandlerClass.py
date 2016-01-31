@@ -5,6 +5,7 @@ class fileHandler():
         self.fileName = "%s.txt" % fileName
         self.experimentFile = None
 
+
     def createFile(self):
         if (os.path.exists(self.fileName) == True):
             print("File aready exists")
@@ -13,8 +14,15 @@ class fileHandler():
             self.experimentFile = open("%s" % self.fileName, "w")
             self.experimentFile.close()
 
+
+
     def openFile(self):
         self.experimentFile = open("%s.txt" % self.fileName, "a")
+        
+    def closeFile(self):
+        self.experimentFile.close()
+
+
             
     def writeHeader(self):
         self.openFile()
@@ -26,5 +34,8 @@ class fileHandler():
         self.experimentFile.write("%.2f;%s;%s\n" %(time, correctTime, correctImage)) ##change the format
         self.closeFile()
         
-    def closeFile(self):
-        self.experimentFile.close()
+    def writeEnd(self):
+        self.openFile()
+        self.experimentFile.write("succesfully ended blah blah")
+        self.closeFile()
+
