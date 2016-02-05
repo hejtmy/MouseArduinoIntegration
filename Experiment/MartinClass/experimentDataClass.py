@@ -1,15 +1,20 @@
 import string, random
 
-class inputData():
+class experimentData():
     def __init__(self):
         ##main variables
         self.times = []
+        self.totalTime = None
         self.fileName = None
         self.reps = None
         
-        self.imageIndexes = None ##create list of indexes for image loading
-        
-        self.totalTime = None
+        self.images = ["D:\Git\MouseArduinoIntegration\Experiment\circle.gif",
+                       "D:\Git\MouseArduinoIntegration\Experiment\square.gif",
+                       "D:\Git\MouseArduinoIntegration\Experiment\triangle.gif"] ##list of image names
+        self.imageIndexes = []
+        for i in range(self.reps):
+            self.imageIndexes.append(random.randint(0, len(self.images)))
+#        create list of indexes to be used during experiment
         
         #variables for checking if parametres are set
         self.fileNameSet = False
@@ -18,7 +23,8 @@ class inputData():
 
 
     def getTimes(self):
-        allowedTimes = list(range(1,61))
+        allowedTimes = list(range(1,301)) # allowed times = 1-300s
+        
         inputOK = False
         while (inputOK != True):
             times = (input("Format: 5,4,8 Times: ")).split(',')
@@ -30,6 +36,7 @@ class inputData():
                     inputOK = True
                 except Exception: ##edit exception
                     pass
+                
         self.times = times
         self.timesSet = True
         self.totalTime = sum(self.times)

@@ -1,6 +1,6 @@
 import serial, os, string, random, time
 
-import arduinoClass, inputDataClass, fileHandlerClass, experimentClass
+import arduinoClass, experimentDataClass, fileHandlerClass, experimentClass, windowClass
 
 
 MyArduino = Arduino()
@@ -9,21 +9,24 @@ MyArduino.prepareForExperiment()
 #ready for an experiment
 #MyArduino.resetArduino()
 
-dataFile = fileHandler("givenFileName")
-dataFile.createFile()
-dataFile.writeHeader()
-dataFile.write(time.clock(),"False","True")
-dataFile.closeFile()
-
-data = inputData()
+data = experimentData()
 data.getTimes()
 data.getReps()
 data.getFileName()
 
+myFile = fileHandler("givenFileName")
+myFile.createFile()
+myFile.writeHeader()
+myFile.closeFile()
+
+imageWindow = window()
+
+experiment = Experiment()
+
 events order:
-1 - Establish connection with arduino
-2 - Get data from user - file name, reps, times
-3 - Create file for writing data / error if it exists, write the file header
+///1 - Establish connection with arduino
+///2 - Get data from user - file name, reps, times
+///3 - Create file for writing data / error if it exists, write the file header
 4 - Check with user if the right pictures are to be shown
 5 - Prepare for experiment -  flush signals, set correct Image etc
 5.5 - PRINT ALL SET DATA TO USER, AND CHECK VALIDITY

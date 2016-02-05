@@ -26,12 +26,13 @@ class fileHandler():
             
     def writeHeader(self):
         self.openFile()
-        self.experimentFile.write("blah header blah\n")
+        self.experimentFile.write("Format\n")
+        self.experimentFile.write("Time ; correctTime ; correctImage ; Phase\n")
         self.closeFile()
         
-    def write(self, time, correctTime, correctImage):
+    def write(self, time, correctTime, correctImage, phase):
         self.openFile()
-        self.experimentFile.write("%.2f;%s;%s\n" %(time, correctTime, correctImage)) ##change the format
+        self.experimentFile.write("%.2f;%s;%s;%d;\n" %(time, correctTime, correctImage, phase)) ##change the format
         self.closeFile()
         
     def writeEnd(self):

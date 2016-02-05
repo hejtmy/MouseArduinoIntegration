@@ -2,63 +2,63 @@ import time
 
 class Experiment():
     def __init__(self):
-        self.images = ["circle.jpg" , "square.jpg" , "triangle.jpg"] ##list of image names
-        self.correctImage = None ##replace with proper img
+        self.correctImage = "D:\Git\MouseArduinoIntegration\Experiment\circle.gif" ##replace with proper img
         self.currentImage = None
         self.counter = 0
-        self.images = ['circle.jpg', 'square,jpg', 'triangle.jpg']
         
-        self.imagesOrder = None
+        self.imagesOrder = data.imageIndexes
 #        set to "reps" list of random number of range "from 0 to len(images)"
 #        or create it in inputData and copy from there
         
-    def showImg(self):
-#        tell imageHandler class to show image
-        pass
-    
-    def setImage(self):
-#        tell imageHandler to set next image                
-        pass
+    def changeImg(self, path):
+#       tell imageHandler class to show image
+        imageWindow.changeImg(path)
 
     def showBlank(self):
+        imageWindow.showWhite()
 #        tell imageHandler to set image to blank
         
-    def singleRound(self):
-        self.showImg()
-        timeNow = time.clock()
-
-        ##fileHandler.write(correctTime, correctImage)
+    def singleRound(self, number):
+        clockStart = time.clock()
+        ##fileHandler.write(time, correctTime, correctImage)
+        self.currentImage = self.imagesOrder(number)
+        self.changeImg(self.currentImage)
+                
         
         ##first segment
-        while( (time.clock() - timeNow) < inputData.times[0]):
-            while(MyArduino.inWaiting() != b"PUSHED/n"):
+        while( (time.clock() - clockStart) < data.times[0]):
+            if(MyArduino.connection.readline() == b"PUSHED"):
                 if (self.currentImage == self.correctImage):
-                    fileHandler.write( time.clock(),"False","True")
+                    fileHandler.write(time.clock(),"False","True", 1)
                 else:
-                    fileHandler.write( time.clock(),"False","False")
+                    fileHandler.write(time.clock(),"False","False", 1)
 
         ##second segment
-        while( (time.clock() - timeNow) < inputData.times[1]):
-            while(MyArduino.inWaiting() != b"PUSHED/n"):
+        while( (time.clock() - clockStart) < data.times[1]):
+            if(MyArduino.connection.readline() == b"PUSHED"):
                 if (self.currentImage == self.correctImage):
-                    fileHandler.writeOK()
+                    fileHandler.write(time.clock(),"True","True", 2)
                 else:
-                    fileHandler.write(time.clock(),"True","False")
+                    fileHandler.write(time.clock(),"True","False", 2)
 
         ##third segment
-        while( (time.clock() - timeNow) < inputData.times[2]):
-            while(MyArduino.inWaiting() != b"PUSHED/n"):
+        while( (time.clock() - clockStart) < data.times[2]):
+            if(MyArduino.connection.readline() == b"PUSHED"):
                 if (self.currentImage == self.correctImage):
-                    fileHandler.write(time.clock(),"False","True")
+                    fileHandler.write(time.clock(),"False","True", 3)
                 else:
-                    fileHandler.write(time.clock(),"Frue","False")
+                    fileHandler.write(time.clock(),"Frue","False", 3)
 
-        self.closeImg()
         self.currentImg = None
-        self.imageProcessID = None
 
     def startExperiment(self):
-        while (counter < inputData.reps):
-            singleRound()
+#        initialize window
+        imageWindow.maximize()
+        imageWindow.topmost()
+        
+        while (self.counter < data.reps):
+#            show image
+            singleRound(self.counter)
             counter += 1
         self.counter = 0
+        
