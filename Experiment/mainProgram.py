@@ -11,8 +11,11 @@ exp.getReps()
 exp.connect()
 exp.prepareForExperiment()
 time.sleep(1)
+
 exp.createFile()
 exp.writeHeader()
+
 exp.startExperiment()
 exp.writeFooter()
+
 exp.resetArduino()

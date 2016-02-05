@@ -20,7 +20,8 @@ class experimentClass():
         self.reps = None
         self.images = [r"D:\Git\MouseArduinoIntegration\Experiment\circle.gif",
                        r"D:\Git\MouseArduinoIntegration\Experiment\square.gif",
-                       r"D:\Git\MouseArduinoIntegration\Experiment\triangle.gif"] ##list of image names
+                       r"D:\Git\MouseArduinoIntegration\Experiment\triangle.gif",
+                       r"D:\Git\MouseArduinoIntegration\Experiment\hexagon.gif"] ##list of image names
         self.imagesOrder = None
         
         self.fileNameSet = False
@@ -38,17 +39,17 @@ class experimentClass():
         
         
         """IMAGE WINDOW INIT"""
-        self.myTk = Tk()
-        self.myTk.geometry("%dx%d+0+0" % (self.myTk.winfo_screenwidth() / 2.0, self.myTk.winfo_screenheight() / 2.0))
-        self.myTk.grid()
+        self.myWindow = Tk()
+        self.myWindow.geometry("%dx%d+0+0" % (self.myWindow.winfo_screenwidth() / 2.0, self.myWindow.winfo_screenheight() / 2.0))
+        self.myWindow.grid()
         
         self.currentImage = None
         self.blankImage = PIM(file = r"D:\Git\MouseArduinoIntegration\Experiment\white.gif")
         
-        self.myCanvas = Canvas(bg = "white", height = self.myTk.winfo_screenheight(), width = self.myTk.winfo_screenwidth())
+        self.myCanvas = Canvas(bg = "white", height = self.myWindow.winfo_screenheight(), width = self.myWindow.winfo_screenwidth())
         self.myCanvas.grid(column = 0, row = 0) #sticky = "EW")
         
-        self.canvasImg = self.myCanvas.create_image(self.myTk.winfo_screenwidth() / 2.0, self.myTk.winfo_screenheight() / 2.0, image = None) #image = path to white img
+        self.canvasImg = self.myCanvas.create_image(self.myWindow.winfo_screenwidth() / 2.0, self.myWindow.winfo_screenheight() / 2.0, image = None) #image = path to white img
 #        self.update()
 
 
@@ -112,6 +113,7 @@ class experimentClass():
         self.times = []
         for i in times:
             self.times.append(int(i))
+            
         self.timesSet = True
         self.totalTime = sum(self.times)
         
@@ -184,17 +186,17 @@ class experimentClass():
     
     """IMAGE WINDOW FUNCTIONS"""
     def maximize(self):
-        self.myTk.attributes('-fullscreen', True)
-        self.myTk.deiconify()
-        self.myTk.update()
+        self.myWindow.attributes('-fullscreen', True)
+        self.myWindow.deiconify()
+        self.myWindow.update()
         
     def topmost(self):
-        self.myTk.attributes('-topmost', True)
-        self.myTk.update()
+        self.myWindow.attributes('-topmost', True)
+        self.myWindow.update()
 
     def minimize(self):
-        self.myTk.iconify()
-        self.myTk.update()
+        self.myWindow.iconify()
+        self.myWindow.update()
         
 
     def setImage(self, number): #pass here index of the image
@@ -204,11 +206,11 @@ class experimentClass():
         self.currentImagePath = path
         self.currentImage = PIM(file = "%s" %path)
         self.myCanvas.itemconfig(self.canvasImg, image = self.currentImage)
-        self.myTk.update_idletasks()
+        self.myWindow.update_idletasks()
     
     def showWhite(self):
         self.myCanvas.itemconfig(self.canvasImg, image = self.blankImage)
-        self.myTk.update_idletasks()
+        self.myWindow.update_idletasks()
 
 
 
@@ -270,4 +272,4 @@ class experimentClass():
             self.counter += 1
             
         self.counter = 0
-        self.myTk.destroy()
+        self.myWindow.destroy()
