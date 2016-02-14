@@ -4,7 +4,7 @@
 bool wasTouching = false;
 String value;
 String receivedText;
-
+int feedTime = 1000; //default = 1000ms
 void setup() {
   // put your setup code here, to run once:
 Serial.begin(9600);
@@ -20,8 +20,9 @@ void working()
   {
     if (digitalRead(buttonPin) == LOW && wasTouching == false)
     {
-      Serial.print("PUSHED");
+      Serial.print("PUSHED\n");
       wasTouching = true;
+      //delay(100); //to eliminate multiple times push?
     }
     
     if (digitalRead(buttonPin) == HIGH)
@@ -32,15 +33,24 @@ void working()
     if (Serial.available() > 0)
     {
       receivedText = Serial.readString();
-      if (receivedText == "REPEAT")
+      if (receivedText == "REPEAT\n")
       {
         wasTouching = false;
         break;
         //alternatively loop()
       }
-      else if (receivedText == "FEEDMOUSE")
+      else if (receivedText == "FEEDMOUSE\n")
       {
         feed();
+      }
+      else if (receivedText == "SETFEEDTIME\n")
+      {
+        delay(500);
+        feedTime = (Serial.read() * 1000)
+        while (Serial.available() > 0)
+        {
+          Serial.read()
+        }
       }
     }
     delay(50);
@@ -50,28 +60,24 @@ void working()
 void feed()
 {
   digitalWrite(feedPin, HIGH); //start feeder
-  delay(2000); //time of feeder rotation
+  delay(feedTime); //time of feeder rotation
   digitalWrite(feedPin, LOW); //stop feeder
 
-  //smazat, jen kontrola prijmuti signalu pro krmeni
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);
-  delay(200);
-  digitalWrite(13, LOW);
-//  while (Serial.available() > 0)
-//  {
-//    Serial.read()
-//    //flush any signal, that was received meanwhile, for example more signals to feed the mouse (unwanted multiple button push)
-//  }
+  while (Serial.available() > 0)
+  {
+    Serial.read()
+    //flush any signal, that was received meanwhile, for example more signals to feed the mouse (unwanted multiple button push)
+  }
+
 }
 
 void loop() {
-  Serial.print("CX37");
+  Serial.print("CX37\n");
   
   if (Serial.available()>0)
   {
     value = Serial.readString();
-    if (value == "STOP")
+    if (value == "STOP\n")
     {
       working();
     }
