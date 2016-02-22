@@ -55,7 +55,7 @@ class arduino():
             time = args[0]
         else:
             time = input("Set feeding time: ")
-        allowedTimes = list(range(10))
+        allowedTimes = list(range(1000, 11000, 1000))
         timeSet = False
         
         while (timeSet != True):
@@ -67,7 +67,9 @@ class arduino():
             else:
                 time = input("Set feed time: ")
                 
-
+    def beep(self):
+        self.arduinoConnection.write(b"BEEP")
+        
     def prepare(self):
         if self.arduinoConnection.isOpen():
             self.arduinoConnection.read_all()

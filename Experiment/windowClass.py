@@ -5,7 +5,9 @@ Created on Mon Feb  8 21:18:34 2016
 @author: Smoothie
 """
 
+from time import sleep
 from tkinter import Tk, Canvas, PhotoImage as PIM
+from winsound import Beep
 
 class window():
     def __init__(self):
@@ -15,7 +17,8 @@ class window():
         self.myWindow.grid()
         
 #        self.currentImage = None
-        self.blankImage = PIM(file = r"D:\Git\MouseArduinoIntegration\Experiment\white.gif")
+        self.white = r"D:\Git\MouseArduinoIntegration\Experiment\white.gif"
+        self.black = r"D:\Git\MouseArduinoIntegration\Experiment\black.gif"
         
         self.image = None
         
@@ -47,9 +50,48 @@ class window():
         self.image = PIM(file = "%s" %imagePath)
         self.myCanvas.itemconfig(self.canvasImg, image = self.image)
         self.myWindow.update_idletasks()
+    
+    
+    def blankWhite(self):
+        self.image = PIM(file = "%s" %self.white)
+        self.myCanvas.itemconfig(self.canvasImg, image = self.image)
+        self.myWindow.update_idletasks()
+    
+    def blankBlack(self):
+        self.image = PIM(file = "%s" %self.black)
+        self.myCanvas.itemconfig(self.canvasImg, image = self.image)
+        self.myWindow.update_idletasks()
+        
+    def blinkWhite(self):
+        previousImage = self.image
+        self.image = PIM(file = "%s" %self.white)
+        self.myCanvas.itemconfig(self.canvasImg, image = self.image)
+        self.myWindow.update_idletasks()
 
+        sleep(0.5)
+        
+        self.image = previousImage
+        self.myCanvas.itemconfig(self.canvasImg, image = self.image)
+        self.myWindow.update_idletasks()
+        
+    def blinkBlack(self):
+        previousImage = self.image
+        self.image = PIM(file = "%s" %self.black)
+        self.myCanvas.itemconfig(self.canvasImg, image = self.image)
+        self.myWindow.update_idletasks()
+
+        Beep(1000, 500)
+        
+        self.image = previousImage
+        self.myCanvas.itemconfig(self.canvasImg, image = self.image)
+        self.myWindow.update_idletasks()
         
     def closeWindow(self):
         self.myWindow.destroy()
 
 
+#myWindow = window()
+#myWindow.maximize()
+#myWindow.topmost()
+#myWindow.blinkBlack()
+#myWindow.closeWindow()

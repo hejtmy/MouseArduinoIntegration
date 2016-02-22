@@ -5,7 +5,7 @@ Created on Mon Feb  8 19:39:31 2016
 @author: Smoothie
 """
 
-import string, random
+import string, random, msvcrt, sys
 
 class experimentData():
     def __init__(self):
@@ -13,6 +13,10 @@ class experimentData():
         self.repetitions = 0
         self.times = [0,0,0]
         self.totalTime = 0
+        
+        self.beep = True
+        self.resetAfterPush = False
+        self.jumpToEnd = False
 
         self.images = [r"D:\Git\MouseArduinoIntegration\Experiment\circle.gif",
                        r"D:\Git\MouseArduinoIntegration\Experiment\square.gif",
@@ -32,7 +36,6 @@ class experimentData():
         self.imagesOrderSet = False
 
 
-
     def setFileName(self):
         counter = None
         allowedChars = "().-_%s%s" % (string.ascii_letters, string.digits) ##only characters for file name allowed
@@ -48,6 +51,20 @@ class experimentData():
         self.fileName = fileName
         self.fileNameSet = True
         
+        
+    def setBeep(self, *args):
+        if len(args) == 1:
+            if (args[0] == True or args[0] == False):
+                self.beep = args[0]
+                return
+        else:
+            beep = input("Beep at the beginning of each round? Y/N")
+            if (beep == "Y" or beep == "y"):
+                self.beep = True
+            elif (beep == "N" or beep == "n"):
+                self.beep = False
+            else:
+                self.setBeep()                
         
         
     def setTimes(self, *args):
@@ -110,12 +127,28 @@ class experimentData():
             try:
                 file = open("%s" %args[0], "r").readlines()
                 for line in file:
-                    if line.startswith("REPETITIONS="):
+                    if line.startswith("REPETITIONS"):
                         repetitions = int((line.split("="))[1].strip())
                         self.setRepetitions(repetitions)
-                    if line.startswith("TIMES="):
+                    if line.startswith("TIMES"):
                         times = (line.split("="))[1].strip()
                         self.setTimes(times)
+                    if line.startswith("FEEDTIME"):
+                        feedTime = (line.split("="))[1].strip()
+                        myArduino.setFeedTime(feedTime)
+                    if line.startswith("JUMPTOEND"):
+                        status = (line.split("="))[1].strip()
+                        if status == "TRUE":
+                            self.jumpToEnd = True
+                        elif status == "FALSE":
+                            self.jumpToEnd = False
+                    if line.startswith("RESETAFTERPUSH"):
+                        status = (line.split("="))[1].strip()
+                        if status == "TRUE":
+                            self.resetAfterPush = True
+                        elif status == "FALSE":
+                            self.resetAfterPush = False
+                            
 #                set parametres from file
             except FileNotFoundError:
                 print("File not found!")
@@ -124,8 +157,6 @@ class experimentData():
             self.setTimes()
         if (self.repetitionsSet == False):
             self.setRepetitions()
-        
-        self.checkValues()
         
             
                 
@@ -136,4 +167,7 @@ class experimentData():
         print("Filename set: \t%r\t Filename: %s" %(self.fileNameSet, self.fileName))
         print("Repetitions set: \t%r\t Number of repetitions: %d" %(self.repetitionsSet, self.repetitions))
         print("Images order set: %r" %(self.imagesOrderSet))
-     
+        print("Reset after push: %r" %(self.resetAfterPush))
+        print("Jump to phase 3 after push: %r" %(self.jumpToEnd))
+        if msvcrt.getch() == b"\x1b":
+            sys.exit(1)

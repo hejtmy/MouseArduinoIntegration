@@ -36,13 +36,18 @@ class fileHandler():
             
     def writeHeader(self):
         self.openFile()
-        self.experimentFile.write("Format\n")
-        self.experimentFile.write("Time ; correctTime ; correctImage ; Phase; Feeding\n")
+        self.experimentFile.write("FORMAT\n")
+        self.experimentFile.write("Experiment time; round time; Phase; Feeding\n")
         self.closeFile()
         
-    def writeStatus(self, timer, correctTime, correctImage, phase, feeding):
+    def writeStatusImages(self, timer, correctTime, correctImage, phase, feeding):
         self.openFile()
         self.experimentFile.write("%.2f;%s;%s;%d;%s\n" %(timer, correctTime, correctImage, phase, feeding)) ##change the format
+        self.closeFile()
+    
+    def writeStatusTiming(self, experimentTime, roundTime, phase, feeding):
+        self.openFile()
+        self.experimentFile.write("%.2f;%.2f;%d;%s\n" %(experimentTime, roundTime, phase, feeding))
         self.closeFile()
         
     def writeFooter(self):

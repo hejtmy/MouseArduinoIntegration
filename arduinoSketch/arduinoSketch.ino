@@ -5,8 +5,11 @@ bool wasTouching = false;
 String value;
 String receivedText;
 int feedTime = 1000; //default = 1000ms
+bool feederOn = false;
+unsigned long feederStartTime;
+
+
 void setup() {
-  // put your setup code here, to run once:
 Serial.begin(9600);
 Serial.setTimeout(20);
 pinMode(buttonPin, INPUT_PULLUP);
@@ -18,69 +21,81 @@ void working()
 {
   while(true)
   {
+    //checking the button state, possibly sending PUSHED signal
     if (digitalRead(buttonPin) == LOW && wasTouching == false)
     {
-      Serial.print("PUSHED\n");
+      Serial.print("PUSHED");
       wasTouching = true;
+      
       //delay(100); //to eliminate multiple times push?
     }
-    
     if (digitalRead(buttonPin) == HIGH)
     {
       wasTouching = false;
     }
 
+    //checking if some command was received
     if (Serial.available() > 0)
     {
       receivedText = Serial.readString();
-      if (receivedText == "REPEAT\n")
+      
+      if (receivedText == "REPEAT")
       {
         wasTouching = false;
         break;
         //alternatively loop()
       }
-      else if (receivedText == "FEEDMOUSE\n")
+      
+      else if (receivedText == "FEEDMOUSE")
       {
-        feed();
+        digitalWrite(feedPin, HIGH);
+        feederOn = true;
+        feederStartTime = millis();
       }
-      else if (receivedText == "SETFEEDTIME\n")
+      
+      else if (receivedText == "SETFEEDTIME")
       {
         delay(500);
-        feedTime = (Serial.read() * 1000)
+        int givenTime = Serial.read();
+        //int givenTime = Serial.readString().toInt();
+        if (givenTime > 500)
+        {
+          feedTime = givenTime;
+        }
+        
+        //flush remaining stuff
         while (Serial.available() > 0)
         {
-          Serial.read()
+          Serial.read();
         }
       }
+
+      else if (receivedText == "TELLFEEDTIME")
+      {
+        Serial.print(feedTime);
+      }
     }
+
+    //if feeder is on longer that feedTime, shut it down
+    if ((feederOn == true) && (millis() - feederStartTime > feedTime))
+    {
+      digitalWrite(feedPin, LOW);
+      feederOn = false;
+    }
+    
     delay(50);
   }
 }
 
-void feed()
-{
-  digitalWrite(feedPin, HIGH); //start feeder
-  delay(feedTime); //time of feeder rotation
-  digitalWrite(feedPin, LOW); //stop feeder
-
-  while (Serial.available() > 0)
-  {
-    Serial.read()
-    //flush any signal, that was received meanwhile, for example more signals to feed the mouse (unwanted multiple button push)
-  }
-
-}
-
 void loop() {
-  Serial.print("CX37\n");
-  
   if (Serial.available()>0)
   {
     value = Serial.readString();
-    if (value == "STOP\n")
+    if (value == "STOP")
     {
       working();
     }
   }
+  Serial.print("CX37");
   delay(1000);
 }
