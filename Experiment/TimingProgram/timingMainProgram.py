@@ -142,8 +142,8 @@ def startExperiment():
     myWindow.closeWindow()    
     myArduino.reset()
     experimentFile.writeFooter()
-    experimentFile.write("Total presses: %d" %pressesTotal)
-    experimentFile.write("Correct presses: %d" %pressesCorrect)
+    experimentFile.write("PRESSESTOTAL=%d" %pressesTotal)
+    experimentFile.write("PRESSESCORRECT=%d" %pressesCorrect)
     
     print("\nTotal push: %d" %pressesTotal)
     print("Pushed right: %d" %pressesCorrect)
@@ -158,7 +158,8 @@ myArduino.prepare()
 #Beep(1500, 100)
 
 data = experimentData()
-data.setP("mode3.txt")
+name = input("File with settings: ")
+data.setP(name)
 data.check()
 #Beep(2000, 100)
 

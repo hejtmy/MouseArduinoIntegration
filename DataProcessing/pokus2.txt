@@ -46,5 +46,5 @@ START
 39;28.35;4.24;3;False
 40;29.10;4.99;3;False
 END
-Total presses: 40
-Correct presses: 20
+PRESSESTOTAL=40
+PRESSESCORRECT=20

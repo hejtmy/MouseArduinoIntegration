@@ -42,6 +42,9 @@ def makeGraph():
     start = 0
     end = 6    
     
+    pressesTotal = 0
+    pressesCorrect = 0
+    
     for i in range(startIndex, endIndex):
         line = lines[i].strip().split(";")
         phases.append(line[3])
@@ -59,15 +62,23 @@ def makeGraph():
             linePositions = []
             linePositions.append(time1)
             linePositions.append(time1 + time2)
-            print("Line positions: ", linePositions)
+            print("Line positions (phase times): ", linePositions)
+        if line.startswith("PRESSESTOTAL"):
+            pressesTotal = int(line.split("=")[1])
+        if line.startswith("PRESSESCORRECT"):
+            pressesCorrect = int(line.split("=")[1])        
     
-    #histogram    
+    #histogram
     plt.hist(times, bins = end*2, range = (start, end), color = 'blue')
+
     plt.axvline(linePositions[0], color = 'red', linewidth = 5)
     plt.axvline(linePositions[1], color = 'red', linewidth = 5)
     plt.xlabel('Time range [s]')
     plt.ylabel('Number of presses [-]')
     plt.grid()
+    
+    plt.figtext(0.05, 0.95, "Total presses: %d" %pressesTotal)
+    plt.figtext(0.3, 0.95, "Correct presses: %d" %pressesCorrect)
     plt.show()
 
 openFile()
