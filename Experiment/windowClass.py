@@ -22,7 +22,7 @@ class window():
         
         self.image = None
         
-        self.myCanvas = Canvas(bg = "white", height = self.myWindow.winfo_screenheight(), width = self.myWindow.winfo_screenwidth())
+        self.myCanvas = Canvas(bg = "black", height = self.myWindow.winfo_screenheight(), width = self.myWindow.winfo_screenwidth())
         self.myCanvas.grid(column = 0, row = 0) #sticky = "EW")
         
         self.canvasImg = self.myCanvas.create_image(self.myWindow.winfo_screenwidth() / 2.0, self.myWindow.winfo_screenheight() / 2.0, image = None) #image = path to white img
@@ -68,7 +68,7 @@ class window():
         self.myCanvas.itemconfig(self.canvasImg, image = self.image)
         self.myWindow.update_idletasks()
 
-        sleep(0.5)
+        Beep(1000, 500)
         
         self.image = previousImage
         self.myCanvas.itemconfig(self.canvasImg, image = self.image)

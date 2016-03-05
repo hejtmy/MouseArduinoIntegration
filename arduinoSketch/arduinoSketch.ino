@@ -26,8 +26,7 @@ void working()
     {
       Serial.print("PUSHED");
       wasTouching = true;
-      
-      //delay(100); //to eliminate multiple times push?
+      delay(50); //simple debounce?
     }
     if (digitalRead(buttonPin) == HIGH)
     {
@@ -52,12 +51,18 @@ void working()
         feederOn = true;
         feederStartTime = millis();
       }
+
+      /*else if (receivedText.startsWith("SETFEEDTIME"))
+      {
+        char tempFeedTime = receivedText.substring(11,12)
+        feedTime = (tempFeedTime - '0')*1000;
+      }
+      */
       
       else if (receivedText == "SETFEEDTIME")
       {
         delay(500);
-        int givenTime = Serial.read();
-        //int givenTime = Serial.readString().toInt();
+        int givenTime = Serial.readString().toInt();
         if (givenTime > 500)
         {
           feedTime = givenTime;
@@ -82,8 +87,8 @@ void working()
       digitalWrite(feedPin, LOW);
       feederOn = false;
     }
+    delay(20);
     
-    delay(50);
   }
 }
 

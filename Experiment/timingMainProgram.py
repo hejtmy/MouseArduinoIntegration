@@ -14,69 +14,81 @@ from experimentDataClass import experimentData
 from fileHandlerClass import fileHandler
 from windowClass import window
 
-totalPush = 0
-pushedOK = 0
+pressesTotal = 0
+pressesCorrect = 0
+
 experimentStartTime = None
 roundStartTime = None
 
 def phase1():
+#    Beep(1000, 200)
     phaseStartTime = time.clock()
-    myWindow.blankWhite()
-    myWindow.blinkBlack()
-
+    myWindow.blankBlack()
+    if data.beep == True:
+        Beep(1000, data.beepLength)
+        
+    myWindow.blinkWhite()
     phase = 1
     while (time.clock() - phaseStartTime <= data.times[0]):
-         if (myArduino.isPushed() == True):
+        if (myArduino.isPushed() == True):
             roundTime = time.clock() - roundStartTime
             experimentTime = time.clock() - experimentStartTime
             experimentFile.writeStatusTiming(experimentTime, roundTime, phase, "False")
-            global totalPush
-            totalPush += 1
+            
+            global pressesTotal
+            pressesTotal += 1
+            
             if data.resetAfterPush == True:
                 return "END"
             elif data.jumpToEnd == True:
                 return "JUMP"
+        time.sleep(0.01)
     return 0
     
 def phase2():
     phaseStartTime = time.clock()
-    Beep(2000, 50)
+#    Beep(2000, 50)
     
     phase = 2
     while (time.clock() - phaseStartTime <= data.times[1]):
-         if (myArduino.isPushed() == True):             
+        if (myArduino.isPushed() == True):             
             roundTime = time.clock() - roundStartTime
             experimentTime = time.clock() - experimentStartTime
             experimentFile.writeStatusTiming(experimentTime, roundTime, phase, "True")
+            myArduino.feedMouse()
             
-            global totalPush
-            totalPush += 1
-            global pushedOK
-            pushedOK += 1
+            global pressesTotal
+            pressesTotal += 1
+            global pressesCorrect
+            pressesCorrect += 1
             
             if data.resetAfterPush == True:
                 return "END"
             elif data.jumpToEnd == True:
                 return "JUMP"
+        time.sleep(0.01)
     return 0
                 
             
-def phase3():
+def phase3(react = True):
     phaseStartTime = time.clock()
-    Beep(4000, 50)
+#    Beep(4000, 50)
     phase = 3
     
     while (time.clock() - phaseStartTime <= data.times[2]):
-         if (myArduino.isPushed() == True):
+        if (myArduino.isPushed() == True):
             roundTime = time.clock() - roundStartTime
             experimentTime = time.clock() - experimentStartTime
             experimentFile.writeStatusTiming(experimentTime, roundTime, phase, "False")
-            global totalPush
-            totalPush += 1
-            if data.resetAfterPush == True:
-                return "END"
-            elif data.jumpToEnd == True:
-                return "JUMP"
+            global pressesTotal
+            pressesTotal += 1
+            
+            if react == True:
+                if data.resetAfterPush == True:
+                    return "END"
+                elif data.jumpToEnd == True:
+                    return "JUMP"        
+        time.sleep(0.01)
     return 0
     
         
@@ -88,14 +100,14 @@ def singleRound():
     if p1 == "END":
         return
     elif p1 == "JUMP":
-        phase3()
+        phase3(react = False)
         return
         
     p2 = phase2()
     if p2 == "END":
         return
     elif p2 == "JUMP":
-        phase3()
+        phase3(react = False)
         return
     
 #    edit, not to react, when moved to phase3
@@ -108,7 +120,7 @@ def singleRound():
     
 
 def startExperiment():
-    experimentFile.writeHeader()
+    experimentFile.writeHeader(data.times, data.totalTime, data.repetitions) #*data.times should send 3 ints, it should unpack the list
 
     myArduino.flush()    
     
@@ -126,34 +138,33 @@ def startExperiment():
         
         singleRound()
         counter += 1
-    
+
+    myWindow.closeWindow()    
     myArduino.reset()
     experimentFile.writeFooter()
-    myWindow.closeWindow()
-    print("Total push: %d" %totalPush)
-    print("Pushed right: %d" %pushedOK)
-    msvcrt.getch()
+    experimentFile.write("Total presses: %d" %pressesTotal)
+    experimentFile.write("Correct presses: %d" %pressesCorrect)
+    
+    print("\nTotal push: %d" %pressesTotal)
+    print("Pushed right: %d" %pressesCorrect)
+    time.sleep(5)
+#    msvcrt.getch()
 
-#Beep(1000, 100)
+
  
 myArduino = arduino()
-try:
-    myArduino.connect()
-except Exception as ex:
-    print(ex)
-    
+myArduino.connect()
 myArduino.prepare()
-
 #Beep(1500, 100)
 
 data = experimentData()
 data.setP("mode3.txt")
 data.check()
-
 #Beep(2000, 100)
 
 experimentFile = fileHandler()
-experimentFile.setFileName(data.fileName)
+experimentFile.setFileName(data.fileName) #pass the fileName to fileHandler
 
 myWindow = window()
+
 startExperiment()

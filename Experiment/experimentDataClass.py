@@ -5,7 +5,7 @@ Created on Mon Feb  8 19:39:31 2016
 @author: Smoothie
 """
 
-import string, random, msvcrt, sys
+import string, random, msvcrt, sys, time
 
 class experimentData():
     def __init__(self):
@@ -13,8 +13,9 @@ class experimentData():
         self.repetitions = 0
         self.times = [0,0,0]
         self.totalTime = 0
+        self.beepLength = 500 #ms
         
-        self.beep = True
+        self.beep = False
         self.resetAfterPush = False
         self.jumpToEnd = False
 
@@ -169,5 +170,6 @@ class experimentData():
         print("Images order set: %r" %(self.imagesOrderSet))
         print("Reset after push: %r" %(self.resetAfterPush))
         print("Jump to phase 3 after push: %r" %(self.jumpToEnd))
-        if msvcrt.getch() == b"\x1b":
-            sys.exit(1)
+        time.sleep(5)
+#        if msvcrt.getch() == b"\x1b":
+#            sys.exit(1)
