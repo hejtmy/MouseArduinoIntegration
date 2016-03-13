@@ -34,22 +34,13 @@ def makeGraph():
     if startIndex == None or endIndex == None:
         print("Indexes not found!")
     
-    
-    phases = []
     times = []
-    feedingStates = []
     
     start = 0
-    end = 6    
+    end = 6  
     
     pressesTotal = 0
     pressesCorrect = 0
-    
-    for i in range(startIndex, endIndex):
-        line = lines[i].strip().split(";")
-        phases.append(line[3])
-        times.append(float(line[2]))
-        feedingStates.append(line[4])
         
     for line in lines:
         if line.startswith("TOTALTIME"):
@@ -68,6 +59,14 @@ def makeGraph():
         if line.startswith("PRESSESCORRECT"):
             pressesCorrect = int(line.split("=")[1])        
     
+    for i in range(startIndex, endIndex):
+        line = lines[i].strip().split(";")
+        if len(line) == 6:
+            if int(line[2]) != 3:
+#                phases.append(line[3])
+                times.append(float(line[4]))
+#                feedingStates.append(line[4])
+            
     #histogram
     plt.hist(times, bins = end*2, range = (start, end), color = 'blue')
 
@@ -77,8 +76,8 @@ def makeGraph():
     plt.ylabel('Number of presses [-]')
     plt.grid()
     
-    plt.figtext(0.05, 0.95, "Total presses: %d" %pressesTotal)
-    plt.figtext(0.3, 0.95, "Correct presses: %d" %pressesCorrect)
+    plt.figtext(0.05, 0.95, "Total presses without 3rd phase: %d" %len(times))
+    plt.figtext(0.6, 0.95, "Correct presses: %d" %pressesCorrect)
     plt.show()
 
 openFile()

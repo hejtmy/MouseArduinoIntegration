@@ -5,7 +5,7 @@ Created on Mon Feb  8 21:18:34 2016
 @author: Smoothie
 """
 
-from time import sleep
+#from time import sleep
 from tkinter import Tk, Canvas, PhotoImage as PIM
 from winsound import Beep
 
@@ -17,14 +17,14 @@ class window():
         self.myWindow.grid()
         
 #        self.currentImage = None
-        self.white = r"D:\Git\MouseArduinoIntegration\Experiment\TimingProgram\white.gif"
-        self.black = r"D:\Git\MouseArduinoIntegration\Experiment\TimingProgram\black.gif"
+        self.whiteImg = r"D:\Git\MouseArduinoIntegration\Experiment\TimingProgram\white.gif"
+        self.blackImg = r"D:\Git\MouseArduinoIntegration\Experiment\TimingProgram\black.gif"
         self.image = None
         
         self.myCanvas = Canvas(bg = "black", height = self.myWindow.winfo_screenheight(), width = self.myWindow.winfo_screenwidth())
         self.myCanvas.grid(column = 0, row = 0) #sticky = "EW")
         self.canvasImg = self.myCanvas.create_image(self.myWindow.winfo_screenwidth() / 2.0, self.myWindow.winfo_screenheight() / 2.0, image = None) #image = path to white img
-        self.blankBlack()
+        self.black()
 #        self.myWindow.update()
         
         
@@ -51,19 +51,20 @@ class window():
         self.myWindow.update_idletasks()
     
     
-    def blankWhite(self):
-        self.image = PIM(file = "%s" %self.white)
+    
+    def white(self):
+        self.image = PIM(file = "%s" %self.whiteImg)
         self.myCanvas.itemconfig(self.canvasImg, image = self.image)
         self.myWindow.update_idletasks()
     
-    def blankBlack(self):
-        self.image = PIM(file = "%s" %self.black)
+    def black(self):
+        self.image = PIM(file = "%s" %self.blackImg)
         self.myCanvas.itemconfig(self.canvasImg, image = self.image)
         self.myWindow.update_idletasks()
         
     def blinkWhite(self):
         previousImage = self.image
-        self.image = PIM(file = "%s" %self.white)
+        self.image = PIM(file = "%s" %self.whiteImg)
         self.myCanvas.itemconfig(self.canvasImg, image = self.image)
         self.myWindow.update_idletasks()
 
@@ -75,7 +76,7 @@ class window():
         
     def blinkBlack(self):
         previousImage = self.image
-        self.image = PIM(file = "%s" %self.black)
+        self.image = PIM(file = "%s" %self.blackImg)
         self.myCanvas.itemconfig(self.canvasImg, image = self.image)
         self.myWindow.update_idletasks()
 

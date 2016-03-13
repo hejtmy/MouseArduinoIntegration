@@ -41,6 +41,7 @@ void working()
       if (receivedText == "REPEAT")
       {
         wasTouching = false;
+        digitalWrite(feedPin, LOW);
         break;
         //alternatively loop()
       }
@@ -63,7 +64,7 @@ void working()
       {
         delay(500);
         int givenTime = Serial.readString().toInt();
-        if (givenTime > 500)
+        if (givenTime >= 100)
         {
           feedTime = givenTime;
         }

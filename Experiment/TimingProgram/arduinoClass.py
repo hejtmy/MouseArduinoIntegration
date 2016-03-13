@@ -8,7 +8,7 @@ Created on Mon Feb  8 19:26:38 2016
 import serial, time, msvcrt, sys
 
 class arduino():
-    def __init__(self, port = "COM3", baudrate = 9600, timeout = 0.01):
+    def __init__(self, port = "COM5", baudrate = 9600, timeout = 0.01):
         self.arduinoConnection = serial.Serial()
         self.arduinoConnection.port = port
         self.arduinoConnection.timeout = timeout
@@ -20,7 +20,8 @@ class arduino():
         try:
             self.arduinoConnection.open();
         except Exception as ex:
-            print("Couldn't connect to arduino! Try ", ex)
+            print("Couldn't connect to arduino!")
+            print(ex)
             msvcrt.getch()
             sys.exit(1)
             
@@ -58,35 +59,36 @@ class arduino():
         else:
             feedTime = input("Set feeding time: ")
             
-        allowedTimes = list(range(1000, 11000, 100))
+        allowedTimes = list(range(100, 11000, 100))
         feedTimeSet = False
 
-        try:
-            feedTime = int(feedTime)
-        except Exception as ex:
-            print("Exception raised:\n", ex)
             
         while (feedTimeSet != True):
+            try:
+                feedTime = int(feedTime)
+            except Exception as ex:
+                print("Exception raised:\n", ex)
+                
             if feedTime in allowedTimes:
-                print("Set feed time to %dms" %feedTime)
+#                print("Set feed time to %dms" %feedTime)
                 self.arduinoConnection.write(b"SETFEEDTIME")
                 time.sleep(0.2)
-                self.arduinoConnection.write(b"%s" %str(feedTime))
+                self.arduinoConnection.write(b"%s" %str(feedTime).encode(encoding="ASCII"))
 #                self.arduinoConnection.write(b"SETFEEDTIME%d" %time)
                 feedTimeSet = True
             else:
-                feedTime = input("Set feed time: ")
+                feedTime = input("Invalid input! Set feed time: ")
     
     def getFeedTime(self):
         self.arduinoConnection.write(b"TELLFEEDTIME")
         time.sleep(0.2)
         if self.arduinoConnection.in_waiting > 0:
             feedTime = self.arduinoConnection.readline()
-            print("Feed time from arduino: ", feedTime)
-            msvcrt.getch()
+            print("Feed time from arduino: %dms" %int(feedTime))
+#            msvcrt.getch()
         else:
             print("Feed time not received from arduino!!!")
-            msvcrt.getch()
+#            msvcrt.getch()
             
     def beep(self):
         self.arduinoConnection.write(b"BEEP")
